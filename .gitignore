@@ -1,3 +1,11 @@
+# Custom ignored files
+.cproject
+.gitattributes
+.project
+.settings
+.DS_Store
+Release/
+
 # Prerequisites
 *.d
 
