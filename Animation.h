@@ -77,4 +77,13 @@ private:
   Timer timer1, timer2;
   int stage, bottom, top, thickness;
 };
+
+class Bounce : public Animation {
+private:
+  void draw(float);
+  void init();
+private:
+  Timer timer;
+  Object ball;
+};
 #endif

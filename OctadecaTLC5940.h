@@ -28,15 +28,15 @@
 #include <math.h>
 #include "Color.h"
 
-// Definition of the hardware for using 18xTLC5940
-#define CHANNELS    2 * 18
+// Definition of the hardware for using 2xTLC5940
+#define CHANNELS    16 * 2
 #define CHNBITS     CHANNELS * 12
 #define CHNBYTES    CHNBITS / 8
 #define SPISPEED    5000000
 
 // Definition of the hardware layers
 #define X_LAYERS	3
-#define Y_LAYERS	3
+#define Y_LAYERS	6
 #define Z_LAYERS	3
 
 /* These are the output pins inputing to the TLC5940. XLAT, BLANK and GSCLK are generated
@@ -53,42 +53,6 @@
  * documentation on how to do that. */
 #define SIN     11
 #define SCLK    13
-
-/* CORE_PIN3_CONFIG configures Pin Control Register PTA12.
- * Pin Mux Control, MUX (bit 10-8) -> Alternative 1 PTA12
- * Pin Mux Control, MUX (bit 10-8) -> Alternative 3 FTM1_CH0
- * Drive Strength Enable, DSE (bit 6) High Drive Strength
- * Slew Rate Enable, SRE (bit 2) Slow slew rate */
-//#define XLAT_PULSE      CORE_PIN3_CONFIG = PORT_PCR_MUX(3) | PORT_PCR_DSE | PORT_PCR_SRE
-//#define XLAT_NOPULSE    CORE_PIN3_CONFIG = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE
-#define XLAT_PULSE      TCCR1A |= _BV(COM1A1)
-#define XLAT_NOPULSE    TCCR1A &= ~_BV(COM1A1)
-
-/* CORE_PIN4_CONFIG configures Pin Control Register PTA13.
- * Pin Mux Control, MUX (bit 10-8) -> Alternative 1 PTA13
- * Pin Mux Control, MUX (bit 10-8) -> Alternative 3 FTM1_CH1
- * Drive Strength Enable, DSE (bit 6) High Drive Strength
- * Slew Rate Enable, SRE (bit 2) Slow slew rate */
-//#define BLANK_PULSE     CORE_PIN4_CONFIG = PORT_PCR_MUX(3) | PORT_PCR_DSE | PORT_PCR_SRE
-//#define BLANK_NOPULSE   CORE_PIN4_CONFIG = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE
-#define BLANK_PULSE     TCCR1A |= _BV(COM1B1)
-#define BLANK_NOPULSE   TCCR1A &= ~_BV(COM1B1)
-
-/* CORE_PIN5_CONFIG configures Pin Control Register PTD7.
- * Pin Mux Control, MUX (bit 10-8) -> Alternative = 1 PTD7
- * Pin Mux Control, MUX (bit 10-8) -> Alternative = 2 CMT_IRO
- * Drive Strength Enable, DSE (bit 6) High Drive Strength
- * Slew Rate Enable, SRE (bit 2) Slow slew rate */
-//#define GSCLK_PULSE     CORE_PIN5_CONFIG = PORT_PCR_MUX(2) | PORT_PCR_DSE | PORT_PCR_SRE
-//#define GSCLK_NOPULSE   CORE_PIN5_CONFIG = PORT_PCR_MUX(1) | PORT_PCR_DSE | PORT_PCR_SRE
-#define GSCLK_PULSE     TCCR2A |= _BV(COM2B1)
-#define GSCLK_NOPULSE   TCCR2A &= ~_BV(COM2B1)
-
-/* This is the timing specific configuration. This is bus speed specific, so look at your
- * scope to get both timers in synch. The first pulse of GSCLK, BLANK and XLAT should all
- * be overlapping where BLANK encapsulates XLAT and XLAT encapsulates GSCLK. Here after
- * are GSCNT amount of GSCLK pulses and than the same encapsulation should happen to
- * restart the GSCYCLE of the TLC5940. */
 
 class OctadecaTLC5940 {
 private:
@@ -118,15 +82,15 @@ private:
   /* This is the pin mapping for multiplexing the layers of the led cube, starting with
    * the bottom layer. All layers are switched with a mosfet LOW=ON, HIGH=OFF, they are
    * connected with a 1K pull up resistor as to not switch them on at boot up time. */
-  uint8_t m_layerPin[Y_LAYERS + 1] = {1<<5,1<<6,1<<7,1<<5};
+  uint8_t m_layerPin[6] = {1<<0,1<<1,1<<2,1<<3,1<<4,1<<5};
   /* Number of bytes that are needed to send all bits to the TLC's. (12 bits/channel) */
   uint8_t m_channelBuffer[CHNBYTES];
   /* There should be only one displayed layer that is set to LOW, all other layers should
    * be set to HIGH. The displaying of the layers will start at the bottom (y=0). Every
    * cycle turns off the current layer first and than turns on the next one. */
-  volatile uint8_t m_LayerOffset = 0;
-  volatile uint8_t m_currentLayer = m_layerPin[m_LayerOffset];
-  volatile uint8_t m_nextLayer = m_layerPin[m_LayerOffset+1];
+  uint8_t m_LayerOffset = 0;
+  uint8_t m_currentLayerPin = m_layerPin[0];
+  uint8_t m_nextLayerPin    = m_layerPin[1];
 public:
   OctadecaTLC5940();
   void setVoxel(int x, int y, int z, Color c);

@@ -29,8 +29,8 @@ void OctadecaTLC5940::begin() {
   digitalWrite(BLANK, HIGH);
   // Set layerpin high to disable the layer. There is a 1K pull-up on each pin.
   for (int i = 0; i < Y_LAYERS; i++) {
-	DDRD|=m_layerPin[i];
-	PORTD|=m_layerPin[i];
+	DDRC|=m_layerPin[i];
+	PORTC|=m_layerPin[i];
   }
   delayMicroseconds(1);
   pinMode(XLAT, OUTPUT);
@@ -63,41 +63,35 @@ void OctadecaTLC5940::begin() {
     delayMicroseconds(1);
   }
 
-  /* Timer 1 - BLANK / XLAT */
-  TCCR1A = _BV(COM1B1);     // non inverting, output on OC1B, BLANK
-  TCCR1B = _BV(WGM13);      // Phase/freq correct PWM, ICR1 top
-  OCR1A = 1;                // duty factor on OC1A, XLAT is inside BLANK
-  OCR1B = 2;                // duty factor on BLANK (larger than OCR1A (XLAT))
-  ICR1 = 8192;              // see tlc_config.h
+  // Normal port operation no pin connected
+  TCCR1A = 0;
+  // PWM phase and frequency correct TOP=ICR1, Update OCR1x at BOTTOM, TOV1 flag set on BOTTOM
+  TCCR1B = 1<<WGM13;
+  // Output compare registers
+  OCR1A = 1;
+  OCR1B = 2;
+  // Input Capture Register
+  ICR1 = 8192;
 
-  /* Timer 2 - GSCLK */
-  TCCR2A = _BV(COM2B1)      // set on BOTTOM, clear on OCR2A (non-inverting), output on OC2B
-         | _BV(WGM21)       // Fast pwm with OCR2A top
-         | _BV(WGM20);      // Fast pwm with OCR2A top
-  TCCR2B = _BV(WGM22);      // Fast pwm with OCR2A top
-  OCR2B = 0;                // duty factor (as short a pulse as possible)
-  OCR2A = 3;                // see tlc_config.h
+  // clear OCR2B on compare match (non-inverting, fast PWM mode)
+  TCCR2A = 1<<WGM21 | 1 <<WGM20 | 1<<COM2B1;
+  // Toggle OCR2A on compare match (fast PWM mode)
+  TCCR2B = 1<<WGM22;
+  // Produces 4Mhz pulse signal (250ns periode) on output pin
+  OCR2A = 3;
+  OCR2B = 0;
+
+  // Enables the Timer1 Overflow interrupt
+  TIFR1 |= 1<<TOV1;
+  TIMSK1 = 1<<TOIE1;
+  // no prescale start timer1 and timer2
+  TCCR1B |= 1<<CS10;
+  TCCR2B |= 1<<CS20;
   
-  TCCR2B |= _BV(CS20);      // no prescale, (start pwm output)
-  TCCR1B |= _BV(CS10);      // no prescale, (start pwm output)
-
-  TIFR1 |= _BV(TOV1);       // Enables the Timer1 Overflow interrupt
-  TIMSK1 = _BV(TOIE1);
-
-  SPSR = _BV(SPI2X);        // double speed (f_osc / 2)
-  SPCR = _BV(SPE)           // enable SPI
-         | _BV(MSTR);       // master mode
-
-  /* Timer pulses can be tied to specific pins. This enables precise debugging on an
-   * Oscilloscope. Pulses can also be generated on any pin in the IRQ, but this will
-   * generate a little bit of jitter. The BLANK and XLAT pins are controlled in the IRQ
-   * since many more pins need to be controlled during this time */
-  // Enable timer to create pulses on GSCLK pin
-  GSCLK_PULSE;
-  // Disable timer to create pulses on BLANK pin.
-  BLANK_NOPULSE;
-  // Disable timer to create pulses on XLAT pin.
-  XLAT_NOPULSE;
+  // double speed (f_osc / 2)
+  SPSR = 1<<SPI2X;
+  // enable SPI Master mode
+  SPCR = 1<<SPE | 1<<MSTR;
 }
 
 /* Sets the next frame ready flag when the display switches from top layer to bottom
@@ -128,23 +122,23 @@ Color OctadecaTLC5940::getRenderingVoxel(int x, int y, int z) {
 // switching pins. Calculations for next cycle are done in advance after this.
 void OctadecaTLC5940::multiplex() {
   // Turn off all outputs before doing anything else
-  PORTB|=B00000100;   // digitalWrite(BLANK, HIGH);
+  PORTB|=B00000100;         // digitalWrite(BLANK, HIGH);
   // Set XLAT to signal new data is available
-  PORTB|=B00000010;  // digitalWrite(XLAT, HIGH);
-  // Set currentLayer Pin HIGH to turn off output
-  PORTD|=m_currentLayer;  //digitalWrite(m_currentLayer, HIGH);
-  // Set nextLayer Pin LOW to turn on output
-  PORTD&=~m_nextLayer;  //digitalWrite(m_nextLayer, LOW);
+  PORTB|=B00000010;         // digitalWrite(XLAT, HIGH);
+  // Set nextLayer Pin LOW to turn on output all others HIGH
+  PORTC=~m_nextLayerPin;
   // clear XLAT inside the BLANK signal
-  PORTB&=B11111011;   // digitalWrite(XLAT, LOW);
-  // Turn on outputs  // digitalWrite(BLANK, LOW);
-  PORTB&=B11111101;
+  PORTB&=B11111101;         // digitalWrite(XLAT, LOW);
+  // Turn on all outputs, new data is latched in
+  PORTB&=B11111011;         // digitalWrite(BLANK, LOW);
+
   // Determine the next current and next layer
   if (++m_LayerOffset == Y_LAYERS) {
 	  m_LayerOffset = 0;
   }
-  m_currentLayer = m_layerPin[m_LayerOffset];
-  m_nextLayer = m_layerPin[m_LayerOffset+1];
+  m_currentLayerPin = m_layerPin[m_LayerOffset];
+  m_nextLayerPin    = m_layerPin[(m_LayerOffset+1)%Y_LAYERS];
+
   // Prepare the NEXT layer, this will be send out NEXT multiplex refresh cycle.
   if(m_LayerOffset==Y_LAYERS-1) {
     // If the next animation frame is ready, swap the rendering and displayed cube
@@ -172,9 +166,9 @@ void OctadecaTLC5940::setChannelBuffer(int y) {
       Color c = m_rgbCube[m_displayedCube][x][y][z];
       // Flip axis of the cube, otherwise (0,0,0) would be at the back of the cube
       chn = m_ledChannel[Z_LAYERS-1-z][x];
-      setChannel(*chn++, c.B);
+      setChannel(*chn++, c.R);
       setChannel(*chn++, c.G);
-      setChannel(*chn,   c.R);
+      setChannel(*chn,   c.B);
     }
   }
 }
@@ -195,6 +189,6 @@ void OctadecaTLC5940::setChannel(uint16_t channel, uint16_t color) {
 void OctadecaTLC5940::sendChannelBuffer() {
   for(int i=0;i<CHNBYTES;i++) {
 	SPDR = m_channelBuffer[i];    // starts transmission
-	while (!(SPSR & _BV(SPIF)));  // wait for transmission complete
+	while (!(SPSR & 1<<SPIF));    // wait for transmission complete
   }
 }

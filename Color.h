@@ -26,7 +26,6 @@ public:
   Color(Color from, Color to, uint16_t step, uint16_t steps);
   bool operator==(Color);
 public:
-  void print();
   void random();
   bool isBlack();
 };
@@ -44,25 +43,5 @@ public:
   void turn(float percentage);
   Color color(float percentage);
   void add(Color);
-};
-
-class ColorBlender {
-public:
-  ColorBlender();
-  ColorBlender(float targetTime);
-  ColorBlender(Color source, Color target, float targetTime);
-public:
-  int direction = 0;
-  Color source, target;
-  float elapsedTime = 0;
-  float targetTime = 1;
-  // blends color from source to target between 0 seconds and targetTime seconds
-  Color blend(float dt);
-  // gets the color between source and target using internal time set by blend
-  Color color(Color source_, Color target_);
-  // same as blend, but reverses source and target when targetTime is reached and
-  // than starts again.
-  Color pulse(float dt);
-  bool finished();
 };
 #endif

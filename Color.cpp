@@ -38,12 +38,6 @@ bool Color::operator==(Color c) {
   return ((c.R==R) & (c.G==G) & (c.B==B));
 }
 
-void Color::print() {
-  //Serial.print(R); Serial.print(",");
-  //Serial.print(G); Serial.print(",");
-  //Serial.print(B); Serial.println();
-}
-
 void Color::random() {
   R=::random(4096);
   G=::random(4096);
@@ -76,63 +70,9 @@ Color ColorWheel::color(float percentage) {
   return Color(colorbuffer[source], colorbuffer[target], index%m_steps, m_steps);
 }
 
-/* Turns the color wheel amount positions forward or banckwards */
+/* Turns the color wheel amount positions forward or backwards */
 void ColorWheel::turn(float percentage) {
   m_wheelPosition+=percentage;
   m_wheelPosition-=(int)m_wheelPosition;
   if(m_wheelPosition<0.0f) m_wheelPosition++;
-}
-
-ColorBlender::ColorBlender() {}
-ColorBlender::ColorBlender(float targetTime_) {
-	elapsedTime = 0;
-	targetTime = targetTime_;
-}
-ColorBlender::ColorBlender(Color source_, Color target_, float targetTime_) {
-	source = source_;
-	target = target_;
-	elapsedTime = 0;
-	targetTime = targetTime_;
-}
-// Can blend in both directions +dt or -dt
-Color ColorBlender::blend(float dt) {
-  if (dt == 0) direction = 0;
-  else if(dt > 0) direction = +1;
-  else if(dt < 0) direction = -1;
-  elapsedTime+=dt;
-  if(elapsedTime >= targetTime) {
-    elapsedTime = targetTime;
-    // return the target because rounding errors could be a bit off
-    return target;
-  }
-  if(elapsedTime < 0) {
-	elapsedTime = 0;
-	// return source
-	return source;
-  }
-  return Color(source, target, 255 * elapsedTime / targetTime, 255);
-}
-Color ColorBlender::color(Color source_, Color target_) {
-  source = source_;
-  target = target_;
-  return Color(source, target, 255 * elapsedTime / targetTime, 255);
-}
-// pulse swaps source and target.
-Color ColorBlender::pulse(float dt) {
-  elapsedTime+=dt;
-  if(elapsedTime >= targetTime) {
-    elapsedTime = 0;
-    Color c = target;
-    target = source;
-    source = c;
-    // no rounding errors here because 0/targetTime is still zero
-  }
-  return Color(source, target, 255 * elapsedTime / targetTime, 255);
-}
-bool ColorBlender::finished() {
-  if(direction == +1)
-    return (elapsedTime == targetTime);
-  else if(direction == -1)
-	  return (elapsedTime == 0);
-  return false;
 }

@@ -47,9 +47,10 @@ private:
   Rain rain = Rain();
   Rainbow rainbow = Rainbow();
   Spiral spiral = Spiral();
+  Bounce bounce = Bounce();
 private:
   Animation* animation = &rainbow;
-  Animation* animations[5] = {
-    &sinus, &twinkel, &rain, &rainbow, &spiral };
+  Animation* animations[6] = {
+    &sinus, &twinkel, &rain, &rainbow, &spiral, &bounce };
 };
 #endif

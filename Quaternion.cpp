@@ -5,7 +5,7 @@
 #define M_1_360PI PI/360
 #define M_1_180PI PI/180
 /*----------------------------------------------------------------------------------------------
- * V3 CLASS
+ * Vector3 CLASS
  *----------------------------------------------------------------------------------------------
  * A vector V in physics is an (angel, magnitude) magnitude is length and the angle
  * is usually represented by Greek letter theta.
@@ -118,7 +118,7 @@ Vector3 Vector3::rotated(float angle, const Vector3& v) const {
 }
 
 /*----------------------------------------------------------------------------------------------
- * Q4 CLASS (QUATERNION)
+ * Quaternion CLASS
  *----------------------------------------------------------------------------------------------
  * A Quaternion is a complex number in the form  w + xi + yj + zk, where w, x, y, z are real
  * numbers and i, j, k are imaginary.
@@ -225,6 +225,9 @@ float Quaternion::magnitude() const {
 float Quaternion::norm() const {
   return w*w + v.dot(v);
 }
+// TODO make this more natural. doesn't make sense to
+// do this from the quaternion object. use vector instead??
+// also see void Quaternion::convertAxisAngle() {
 // rotate v_ by this quaternion
 void Quaternion::rotate(Vector3& v_) const {
   // creates a pure quaternion from a vector
