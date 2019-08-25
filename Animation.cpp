@@ -157,7 +157,7 @@ void Spiral::draw(float dt){
     if(stage == state++)
       top < height ? top++ : stage++;
     if(stage == state++)
-      thickness < 10 ? thickness++ : stage++;
+      thickness < 20 ? thickness++ : stage++;
     if(stage == state++)
       if(timer2.ticks()) stage++;
     if(stage == state++)

@@ -2,8 +2,6 @@
 #include <stdlib.h>
 #include "Quaternion.h"
 #define PI M_PI
-#define M_1_360PI PI/360
-#define M_1_180PI PI/180
 /*----------------------------------------------------------------------------------------------
  * Vector3 CLASS
  *----------------------------------------------------------------------------------------------
@@ -100,16 +98,15 @@ bool Vector3::inside(int width, int height, int depth) {
 		 (y < height && y >= 0) &&
 		 (z < depth && z >= 0);
 }
-// UNTESTED CODE!!!! TODO TEST THIS!!!
-// rotate v by this vector (axis) and angle using Rodrigues formula
-// Angle is in degree and is converted to radian by 2PI/360 * angle => PI/180 * angle
+// rotate v by an angle and this vector holding an axis using Rodrigues formula
 void Vector3::rotate(float angle, Vector3& v) const {
-  float c = cosf(angle);
-  float s = sinf(angle);
+  // Angle is in degree and is converted to radian by multiplying by 2PI/360
+  float c = cosf(2*PI/360 * angle);
+  float s = sinf(2*PI/360 * angle);
   // normalize this vector to get n hat
   Vector3 n = normalized();
   // (1-cos(0))(v.n)n + cos(0)v + sin(0)(n x v)
-  v = n*((1-c)*n.dot(v)) + ((v*c) + n.cross(v)*s);
+  v = n*v.dot(n)*(1-c) + v*c + n.cross(v)*s;
 }
 Vector3 Vector3::rotated(float angle, const Vector3& v) const {
   Vector3 v_ = v;
@@ -127,23 +124,34 @@ Vector3 Vector3::rotated(float angle, const Vector3& v) const {
  */
 // constructors
 Quaternion::Quaternion():w(0.0f),v(Vector3(0.0, 0.0, 0.0)){}
+//Make a quaternion from a scalar and a vector
 Quaternion::Quaternion(float w_, const Vector3& v_) {
   w=w_; v=v_;
 }
 Quaternion::Quaternion(const Quaternion& q):w(q.w),v(q.v){}
+// Make a unit quaternion from an axis as a vector and an angle
+// Theoretically the magnitude of v_ can be used to specify the rotation
+// Using an angle makes things more convenient
+Quaternion::Quaternion(const Vector3& v_, float a) {
+  // normalize v to get n hat (unit vector with length = 1)
+  Vector3 n = v_.normalized();
+  // Angle is in degree and is converted to radian by 2PI/360 * angle
+  // Angles are divided by 2 when using quaternions so back to PI/360
+  a=a*PI/360;
+  // Multiply n hat by sin(0) (scale n, but no directional change)
+  // So v still represents the axis of rotation, but changed magnitude
+  v=n*sinf(a);
+  // Store cos(0) in the scalar part of the quaternion, results in a
+  // unit quaternion => w^2+x^2+y^2+z^2=1, since sin(x)^2+cos(x)^2=1
+  // Magnitude is always one. To stack rotations multiply unit
+  // quaternions together and keep magnitude 1. So multiple rotations
+  // without changing size of an object
+  w=cosf(a);
+}
 // copy assignment (operator =)
 Quaternion& Quaternion::operator=(const Quaternion& q) {
   w=q.w; v=q.v;
   return *this;
-}
-// Makes a real quaternion from an angle and an axis stored in this 'fake' quaternion
-// Angle is in degree and is converted to radian by 2PI/360 * angle => PI/180 * angle
-// Angles are divided by 2 when using quaternions so back to PI/360 => M_1_360PI
-void Quaternion::convertAxisAngle() {
-  v.normalize();
-  w*=M_1_360PI;
-  v*=sinf(w);
-  w=cosf(w);
 }
 
 // add, subtract (operator +, -, +=, -=)
@@ -225,10 +233,8 @@ float Quaternion::magnitude() const {
 float Quaternion::norm() const {
   return w*w + v.dot(v);
 }
-// TODO make this more natural. doesn't make sense to
-// do this from the quaternion object. use vector instead??
-// also see void Quaternion::convertAxisAngle() {
-// rotate v_ by this quaternion
+
+// rotate v_ by this quaternion holding an axis and angle
 void Quaternion::rotate(Vector3& v_) const {
   // creates a pure quaternion from a vector
   Quaternion p = Quaternion(0, v_);

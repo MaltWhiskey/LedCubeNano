@@ -57,12 +57,13 @@ public:
   Vector3 v;
 public:
   // constructors
-  Quaternion(float a, const Vector3& v);
   Quaternion();
   Quaternion(const Quaternion& q);
+  Quaternion(float a, const Vector3& v);
+  Quaternion(const Vector3& v, float a);
+
   // copy assignment
   Quaternion& operator=(const Quaternion& q);
-  void convertAxisAngle();
 
   // moving (add subtract)
   Quaternion operator+(const Quaternion& q) const;
