@@ -173,18 +173,11 @@ void Bounce::init() {
   ball.position = Vector3(width/2.0f, height/2.0f, depth/2.0f);
   ball.velocity = Vector3(generator.nextRandom(4.0f,10.0f),
 	generator.nextRandom(4.0f,10.0f), generator.nextRandom(4.0f,10.0f));
-  timer = 5.0f;
+  timer = 10.0f;
 }
 void Bounce::draw(float dt) {
   colorwheel.turn(dt/5.0f);
-
-  for(int x=0;x<width;x++)
-  for(int y=0;y<height;y++)
-  for(int z=0;z<depth;z++) {
-	if(ball.hit(x,y,z, 1.0f))
-      cube.setVoxel(x,y,z, colorwheel.color(0));
-  }
+  cube.radiateVoxel(ball.position, colorwheel.color(0), 1.4f);
   ball.bounce(dt, generator.nextRandom(5.0f,20.0f), width, height, depth);
-
   if(timer.ticks()) restart();
 }

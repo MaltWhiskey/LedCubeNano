@@ -59,15 +59,18 @@ void Cube::mergeVoxel(Vector3& v, Color c_) {
 }
 void Cube::mergeVoxel(int x, int y, int z, Color c_) {
   Color c = getRenderingVoxel(x,y,z);
-  c.R = (c_.R + c.R) >> 1;
-  c.G = (c_.G + c.G) >> 1;
-  c.B = (c_.B + c.B) >> 1;
+  c.R = (c_.R + c.R);
+  c.G = (c_.G + c.G);
+  c.B = (c_.B + c.B);
+  if(c.R > 0xfff) c.R = 0xfff;
+  if(c.G > 0xfff) c.G = 0xfff;
+  if(c.B > 0xfff) c.B = 0xfff;
   setVoxel(x,y,z,c);
 }
 void Cube::radiateVoxel(Vector3& vOrigin, Color c_, float distance) {
-  for(int x=vOrigin.x-1;x<vOrigin.x+2;x++)
-  for(int y=vOrigin.y-1;y<vOrigin.y+2;y++)
-  for(int z=vOrigin.z-1;z<vOrigin.z+2;z++) {
+  for(int x=vOrigin.x-1;x<=vOrigin.x+1;x++)
+  for(int y=vOrigin.y-1;y<=vOrigin.y+1;y++)
+  for(int z=vOrigin.z-1;z<=vOrigin.z+1;z++) {
 	Vector3 vLight = Vector3(x,y,z) ;
 	if(vLight.inside(m_Width,m_Height,m_Depth)) {
 	  Vector3 vDistance = vOrigin - vLight;

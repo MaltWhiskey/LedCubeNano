@@ -49,7 +49,7 @@ private:
   Spiral spiral = Spiral();
   Bounce bounce = Bounce();
 private:
-  Animation* animation = &rainbow;
+  Animation* animation = &bounce;
   Animation* animations[6] = {
     &sinus, &twinkel, &rain, &rainbow, &spiral, &bounce };
 };
