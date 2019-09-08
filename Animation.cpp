@@ -35,23 +35,31 @@ bool Animation::running() {
 /*---------------------------------------------------------------------------------------
  * SINUS
  *-------------------------------------------------------------------------------------*/
-void Sinus::init() { }
+void Sinus::init() {
+  x1 = generator.nextRandom(-3,0);
+  x2 = generator.nextRandom(0, 3);
+  z1 = generator.nextRandom(-3,0);
+  z2 = generator.nextRandom(0, 3);
+}
 void Sinus::draw(float dt) {
   phase += PI*dt;
   colorwheel.turn(-dt/5.0f);
 
   for(int x=0;x < width;x++) {
-    X = cube.map(x, 0, width-1, -2, 2);
+    X = cube.map(x, 0, width-1, x1, x2);
     for(int z=0;z < depth;z++) {
-      Z = cube.map(z, 0, depth-1,-2,2);
+      Z = cube.map(z, 0, depth-1, z1, z2);
       Y = sinf(phase + sqrtf(X*X + Z*Z));
-      Y = round(cube.map(Y, -1, 1, 0, height-1));
-      cube.setVoxel(x,(int)Y,z, colorwheel.color(Y*0.1f));
+//    Y = round(cube.map(Y, -1, 1, 0, height-1));
+//    cube.setVoxel(x,(int)Y,z, colorwheel.color(Y*0.1f));
+      Y = cube.map(Y, -1, 1, 0, height-1);
+      Vector3 v = Vector3(x,Y,z);
+      cube.radiateVoxel(v,colorwheel.color(Y*0.1f), 2.5f);
     }
   }
 
-  if(phase/(4*PI) >= 1) {
-	  phase-=4*PI;
+  if(phase/(12*PI) >= 1) {
+	  phase-=12*PI;
 	  restart();
   }
 }

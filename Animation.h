@@ -42,6 +42,9 @@ class Sinus : public Animation {
 private:
   void draw(float);
   void init();
+private:
+  float x1, x2;
+  float z1, z2;
 };
 
 class Twinkel : public Animation {
