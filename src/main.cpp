@@ -1,25 +1,24 @@
 #include <Arduino.h>
-#include "Cube.h"
-#include "Color.h"
-#include "Util.h"
+#include "animations.h"
 /*---------------------------------------------------------------------------------------
  * Globals
  *-------------------------------------------------------------------------------------*/
-Cube cube(3,6,3);
-ColorWheel colorwheel(250);
-NoiseGenerator generator;
+Sinus sinus = Sinus();
+Spiral spiral = Spiral();
+Rainbow rainbow = Rainbow();
+Rain rain = Rain();
+Bounce bounce = Bounce();
+Fireworks fireworks = Fireworks();
+Twinkel twinkel = Twinkel();
 /*---------------------------------------------------------------------------------------
  * Initialize setup parameters
  *-------------------------------------------------------------------------------------*/
 void setup() {
-  cube.begin();
-  colorwheel.add(Color::RED);
-  colorwheel.add(Color::GREEN);
-  colorwheel.add(Color::BLUE);
+  Animation::begin();
 }
 /*---------------------------------------------------------------------------------------
  * Start the main loop
  *-------------------------------------------------------------------------------------*/
 void loop() {
-  cube.animate();
+  Animation::animate();
 }

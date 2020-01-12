@@ -1,13 +1,31 @@
 #ifndef COLOR_H
 #define COLOR_H
-#include <stdint.h>
-#include <arduino.h>
-
+/*---------------------------------------------------------------------------------------
+ * Globals
+ *-------------------------------------------------------------------------------------*/
+extern uint8_t RainbowGradientPalette[];
+/*---------------------------------------------------------------------------------------
+ * Color CLASS
+ *---------------------------------------------------------------------------------------
+ * Color had a red, blue and green value
+ * 
+ * Different contructors are available to get the desired color. Colors can be
+ * generated from a pallete, predefined values or randomly generated.
+ *-------------------------------------------------------------------------------------*/
 class Color {
 public:
-  uint16_t R;
-  uint16_t G;
-  uint16_t B;
+  union {
+    uint8_t r;
+    uint8_t red;
+  };
+  union {
+    uint8_t g;
+    uint8_t green;
+  };
+  union {
+    uint8_t b;
+    uint8_t blue;
+  };
 public:
   static const Color BLACK;
   static const Color WHITE;
@@ -22,26 +40,19 @@ public:
   static const Color BROWN;
 public:
   Color();
-  Color(uint16_t R, uint16_t G, uint16_t B);
-  Color(Color from, Color to, uint16_t step, uint16_t steps);
-  bool operator==(Color);
-public:
-  void random();
-  bool isBlack();
-};
+  Color(const Color& c);
+  Color(const uint8_t red, const uint8_t green, uint8_t blue);
+  Color(const uint8_t min, const uint8_t max);
+  Color(const uint8_t index, const uint8_t* pallete);  
+  Color(const uint8_t scalar, const Color& source, const Color& target);
 
-class ColorWheel {
-private:
-  float m_wheelPosition = 0;
-  int m_steps = 0;
-  int m_colors = 0;
+  Color& scale(const uint8_t scalar);
+  Color& operator+=(const Color& c);
+  Color& operator-=(const Color& c);
 
-  const static int colorbuffersize = 6;
-  Color colorbuffer[colorbuffersize];
-public:
-  ColorWheel(int steps);
-  void turn(float percentage);
-  Color color(float percentage);
-  void add(Color);
+  Color& operator+(const Color& c) const;
+  Color& operator-(const Color& c) const;
+  bool operator==(const Color& c) const;
+  bool isBlack() const;
 };
 #endif

@@ -1,54 +1,54 @@
 #ifndef UTIL_H
 #define UTIL_H
-#include "Color.h"
-#include "Quaternion.h"
-
+/*----------------------------------------------------------------------------------------------
+ * NoiseGenerator CLASS
+ *----------------------------------------------------------------------------------------------
+ * This class generates numbers according to a plan. The numbers can be random, from a
+ * Perlin noise like distribution or from a Gaussian distribution.
+ *----------------------------------------------------------------------------------------------*/
 class NoiseGenerator {
 private:
   bool hasSpare = false;
   float spare;
 public:
   // get next normally divided value with given mean and stdev
-  float nextGaussian(float mean, float stdev);
+  float nextGaussian(const float mean, const float stdev);
   // nextGaussian but with a max deviation of range * stdev
-  float nextGaussian(float mean, float stdev, int range);
+  float nextGaussian(const float mean, const float stdev, const float range);
   // get a random float value between min and max (boundaries included)
-  float nextRandom(float min, float max);
+  float nextRandom(const float min, const float max) const;
 };
 
+/*----------------------------------------------------------------------------------------------
+ * TIMER CLASS
+ *----------------------------------------------------------------------------------------------
+ * The Timer class is used to do timing specific actions. All time is in seconds
+ *
+ * Sets a timer for 0.10 seconds:
+ * Timer t = 0.10f;
+ * Timer t = Timer(0.10f);
+ *
+ * Returns an integer of the times the timer has counted 0.10 seconds
+ * t.update();
+ *----------------------------------------------------------------------------------------------*/
 class Timer {
 public:
   Timer();
-  Timer(float);
-  void operator=(float);
-  int ticks();
-  bool expired();
+  Timer(const float alarm);
+  void operator=(const float alarm);
+  uint16_t update();
+  float dt() const;
+  float rt() const;
 private:
-  float m_alarm = 0;
-  unsigned int m_ticks = 0;
+  // alarm time in seconds
+  float m_alarmTime = 0;
+  // amount of times counted to alarm
+  uint16_t m_alarmCount = 0;
+  // time management 
   unsigned long m_startTime = 0;
   unsigned long m_lastTime = 0;
   unsigned long m_currentTime = 0;
   unsigned long m_deltaTime = 0;
   unsigned long m_runTime = 0;
-};
-
-class Object {
-public:
-  Vector3 position = Vector3(0,0,0);
-  Vector3 velocity = Vector3(0,0,0);
-  Vector3 gravity  = Vector3(0,0,0);
-public:
-  Object(Vector3 p = Vector3(0,0,0), Vector3 v = Vector3(0,0,0),Vector3 g = Vector3(0,0,0)):position(p), velocity(v), gravity(g) {}
-public:
-  void move(float dt);
-  // determine if v is within radius of this
-  bool hit(float x, float y, float z, float radius) const;
-  // bounce object on top of display
-  void bounce(float dt, float vy, int width, int height, int depth);
-  // put some resistance on the moving of the object
-  void drag(float dt, float n);
-  // checks if coordinates are within the display area
-  bool inside(int width, int height, int depth);
 };
 #endif
