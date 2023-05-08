@@ -1,4 +1,5 @@
 #include <Arduino.h>
+
 #include "animations.h"
 /*---------------------------------------------------------------------------------------
  * Globals
@@ -8,17 +9,13 @@ Spiral spiral = Spiral();
 Rainbow rainbow = Rainbow();
 Rain rain = Rain();
 Bounce bounce = Bounce();
-Fireworks fireworks = Fireworks();
+//Fireworks fireworks = Fireworks();
 Twinkel twinkel = Twinkel();
 /*---------------------------------------------------------------------------------------
  * Initialize setup parameters
  *-------------------------------------------------------------------------------------*/
-void setup() {
-  Animation::begin();
-}
+void setup() { Animation::begin(); }
 /*---------------------------------------------------------------------------------------
  * Start the main loop
  *-------------------------------------------------------------------------------------*/
-void loop() {
-  Animation::animate();
-}
+void loop() { Animation::animate(); }

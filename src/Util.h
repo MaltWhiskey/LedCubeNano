@@ -28,7 +28,8 @@ public:
  * Timer t = 0.10f;
  * Timer t = Timer(0.10f);
  *
- * Returns an integer of the times the timer has counted 0.10 seconds
+ * Returns an integer of the times the timer has counted 0.10 seconds but only if
+ * the next alarm threshold has passed since last call to update, otherwise returns zero. 
  * t.update();
  *----------------------------------------------------------------------------------------------*/
 class Timer {
